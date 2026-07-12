@@ -1,15 +1,68 @@
-# TEC Domain App Template — Claude Code Instructions
+# TEC Alert — Claude Code Instructions
 
-## What This Repo Is
+> ⚡ **SESSION START:** اقرأ `knowledge-base/C-02___CURRENT_STATE_.md` + **app charter
+> `knowledge-base/C-111___ALERT_INSTITUTIONAL_CHARTER.md`** من `yasira82/tec-knowledge-base` (branch: `main`).
 
-The **golden starter template** for a new app in the TEC Federated Platform.
-It ships a correct, Portal-ready skeleton: Hub SSO, dual-mode Pi payments,
-CSRF, legal pages, and CI policy guards. Clone it, run the "New app setup"
-checklist below, and you have a compliant app — no missing pieces.
+## What This App Is
 
-**Reference of record:** `yasira82/tec-knowledge-base` — especially
-`C-12_Dual_Mode_Payment.md` (payment + anti-regression) and
-`audits/PORTAL_SUBMISSION_RUNBOOK_*.md`.
+**The smart notification hub** for the TEC Federated Platform + the Pi community
+(C-111, extended). Alert answers one question:
+
+```
+"What do I need to know right now?"
+```
+
+It is one inbox that **aggregates · classifies · prioritizes · routes** signals
+from every TEC app (payments, security, connections, goals, assets, property,
+verification, AI) **and** a curated **Pi-community feed** (mainnet updates, Pi
+news, hackathons, scam warnings, verified projects), so a user doesn't open eight
+apps to know what changed.
+
+> **Scope note:** C-111 (charter) defines Alert as the admin **risk/anomaly
+> early-warning** system. This app **extends** that into a *user-facing* notification
+> hub — the charter's risk/security signals become **one category** (`security`) in
+> the inbox. Same boundary: Alert presents + routes; it never resolves the incident.
+
+Built from `tec-template-base` (Next.js 15 frontend).
+
+**Current Phase: Alert V0/V1 — Notification Hub (read-only).** Identity / domain /
+slug / legal + a read-only inbox (TEC activity + Pi community, filterable, severity
++ unread) + a `/alert/[id]` detail page + **Alert Pro** (the Pi Portal "Process a
+Transaction" gate). Live delivery (tec-notification-service + a Pi news source) is
+Phase 1+. Not yet deployed.
+
+---
+
+## Pi App Identity
+
+| Field | Value |
+|-------|-------|
+| **App** | TEC Alert |
+| **Domain** | `https://alert.tecosystem.app` |
+| **Pi App ID** | ⏳ TBD — register at Pi Developer Portal · then Vercel `NEXT_PUBLIC_PI_APP_ID` |
+| **APP_SOURCE slug** | `alert` (payment-service resolves `PI_API_KEY_ALERT`) |
+| **PI_SANDBOX** | `false` (Mainnet) |
+
+---
+
+## Alert-Specific Rules (C-111)
+
+### The boundary — Alert presents + routes; it does NOT act
+Alert **OWNS**: signal collection + aggregation, classification (category +
+severity), the unified inbox, escalation routing, and incident-context assembly.
+Alert does **NOT OWN**:
+- **Incident resolution** → the affected/owning service (Alert routes you there).
+- **Security enforcement** → NX (C-112). **Governance action** → SYSTEM (C-110).
+- **Payment reversal** → tec-payment-service. **Notification delivery** → tec-notification-service.
+
+### Isolation (P6)
+A user sees ONLY their own TEC alerts — identity from the `tec_user` session
+cookie server-side, **never** a query param or body. The Pi-community feed is
+public. No session → own-scope alerts fail closed.
+
+**Reference of record:** `yasira82/tec-knowledge-base` —
+`C-111___ALERT_INSTITUTIONAL_CHARTER.md` (charter) + `C-12_Dual_Mode_Payment.md`
+(payment anti-regression) + `C-123` (session/cookies).
 
 ---
 
