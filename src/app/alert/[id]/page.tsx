@@ -5,10 +5,14 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { getAlert, FEED, CATEGORY_META, SEVERITY_META } from '@/lib/alert/feed';
+import { resolveAlert } from '@/lib/alert/server';
 
+// Pre-render the curated sample ids; allow live-only backend alerts to render on
+// demand (the Alert read-layer is the inbox of record — C-111).
 export function generateStaticParams() {
   return FEED.map((a) => ({ id: a.id }));
 }
+export const dynamicParams = true;
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> },
@@ -25,7 +29,9 @@ export default async function AlertPage(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const a = getAlert(id);
+  // Resolve from the live Alert read-layer; fall back to the curated sample so the
+  // page never 500s. A live 404 is authoritative → "not found".
+  const { alert: a } = await resolveAlert(id);
 
   const wrap: React.CSSProperties = {
     minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
