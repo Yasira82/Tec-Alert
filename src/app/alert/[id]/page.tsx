@@ -2,36 +2,20 @@
 // with its category, severity, and the app that raised it. Alert presents +
 // routes you to the owning app; it never resolves the incident itself (C-111 §4).
 import Link from 'next/link';
-import type { Metadata } from 'next';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-import { getAlert, FEED, CATEGORY_META, SEVERITY_META } from '@/lib/alert/feed';
+import { CATEGORY_META, SEVERITY_META } from '@/lib/alert/feed';
 import { resolveAlert } from '@/lib/alert/server';
 
-// Pre-render the curated sample ids; allow live-only backend alerts to render on
-// demand (the Alert read-layer is the inbox of record — C-111).
-export function generateStaticParams() {
-  return FEED.map((a) => ({ id: a.id }));
-}
-export const dynamicParams = true;
-
-export async function generateMetadata(
-  { params }: { params: Promise<{ id: string }> },
-): Promise<Metadata> {
-  const { id } = await params;
-  const a = getAlert(id);
-  return {
-    title:       a ? `${a.title} — TEC Alert` : 'TEC Alert',
-    description: a ? a.body : 'A TEC Alert notification (C-111).',
-  };
-}
+// Rendered dynamically from the live Alert read-layer — real data end-to-end
+// (C-135 §4): a live 404 is "not found"; an unreachable backend is an honest
+// "couldn't load". Never a fabricated sample.
+export const dynamic = 'force-dynamic';
 
 export default async function AlertPage(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  // Resolve from the live Alert read-layer; fall back to the curated sample so the
-  // page never 500s. A live 404 is authoritative → "not found".
-  const { alert: a } = await resolveAlert(id);
+  const { alert: a, source } = await resolveAlert(id);
 
   const wrap: React.CSSProperties = {
     minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
@@ -40,12 +24,19 @@ export default async function AlertPage(
   const inner: React.CSSProperties = { maxWidth: 640, margin: '0 auto' };
 
   if (!a) {
+    const unavailable = source === 'unavailable';
     return (
       <main style={wrap}>
         <div style={inner}>
           <Link href="/app" style={{ fontSize: 13, color: TEC_COLORS.gold, textDecoration: 'none' }}>← Inbox</Link>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: TEC_COLORS.text, marginTop: 16 }}>Alert not found</h1>
-          <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>No alert <code>{id}</code> in your feed.</p>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: TEC_COLORS.text, marginTop: 16 }}>
+            {unavailable ? 'Couldn’t load this alert' : 'Alert not found'}
+          </h1>
+          <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>
+            {unavailable
+              ? 'Your inbox is unavailable right now. Please try again shortly.'
+              : <>No alert <code>{id}</code> in your feed.</>}
+          </p>
         </div>
       </main>
     );
@@ -84,8 +75,8 @@ export default async function AlertPage(
         </div>
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '20px 0 0', lineHeight: 1.5 }}>
-          This is a read-only sample. Live alerts are delivered by tec-notification-service
-          + a curated Pi-community source (Phase 1+). Security response → NX; governance → SYSTEM.
+          Alerts are delivered by tec-notification-service + a curated Pi-community source.
+          Alert presents + routes — security response → NX; governance → SYSTEM.
         </p>
       </div>
     </main>
