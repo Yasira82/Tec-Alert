@@ -6,7 +6,7 @@ import { resolveFeed, feedUnread } from '@/lib/alert/server';
 // Alert aggregates + classifies signals from TEC apps + the Pi community. Proxies
 // the caller's OWN notifications from the backend (identity from the `tec_user`
 // session cookie server-side — NEVER a param, P6) + the global Pi-community feed,
-// returning source:'live'; falls back to the curated sample (source:'sample') if the
+// returning source:'live'; returns source:'unavailable' with an empty inbox (honest state, C-135 §4) if the
 // backend is unreachable, so the inbox is never blank. Read-only. NEW-A: gateway URL
 // is server-only.
 function ownerFromSession(req: NextRequest): string | null {

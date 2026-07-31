@@ -4,16 +4,17 @@
 // know right now?" One inbox that aggregates + classifies signals from every TEC
 // app (payments, security, connections, goals, assets, property, verification,
 // AI) AND a curated Pi-community feed (mainnet/news/hackathons/scam warnings).
-// Alert presents + routes; the owning app owns resolution (C-111 §4). This V1
-// reads a curated sample via /api/bff/alert/feed; live delivery (tec-notification-
-// service + a Pi news source) is Phase 1+.
+// Alert presents + routes; the owning app owns resolution (C-111 §4). The inbox
+// reads the live feed via /api/bff/alert/feed (tec-notification-service + a Pi news
+// source); with no session / unreachable backend it shows an honest empty state.
 import Link from 'next/link';
+import { InviteCard } from '@/components/referral/InviteCard';
 import { useEffect, useMemo, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { AlertPro } from './components/AlertPro';
 import {
-  FEED, CATEGORY_META, SEVERITY_META, filterFeed, unreadCount,
+  CATEGORY_META, SEVERITY_META, filterFeed, unreadCount,
   type Source, type Alert,
 } from '@/lib/alert/feed';
 
@@ -28,8 +29,9 @@ export default function AlertHome() {
   const name = user?.piUsername ? `@${user.piUsername}` : 'there';
 
   const [tab,   setTab]   = useState<Source | 'all'>('all');
-  const [feed,  setFeed]  = useState<Alert[]>(FEED);
-  const [source, setSource] = useState<'sample' | 'live'>('sample');
+  const [feed,  setFeed]  = useState<Alert[]>([]);
+  // Real data end-to-end (C-135 §4): the live inbox or an honest empty state.
+  const [status, setStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading');
 
   useEffect(() => {
     let alive = true;
@@ -37,10 +39,14 @@ export default function AlertHome() {
       try {
         const res  = await fetch('/api/bff/alert/feed', { credentials: 'include' });
         const data = await res.json().catch(() => null);
-        if (!alive || !data || !Array.isArray(data.feed)) return;
-        setFeed(data.feed as Alert[]);
-        setSource(data.source === 'live' ? 'live' : 'sample');
-      } catch { /* keep the curated sample */ }
+        if (!alive) return;
+        if (data && data.source === 'live' && Array.isArray(data.feed)) {
+          setFeed(data.feed as Alert[]);
+          setStatus('ready');
+        } else {
+          setStatus('unavailable');
+        }
+      } catch { if (alive) setStatus('unavailable'); }
     })();
     return () => { alive = false; };
   }, []);
@@ -83,14 +89,26 @@ export default function AlertHome() {
           {TABS.map((t) => (
             <button key={t.id} style={tab_(tab === t.id)} onClick={() => setTab(t.id)}>{t.label}</button>
           ))}
-          <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
-            {source === 'live' ? 'live · notifications' : 'sample feed'}
-          </span>
+          {status === 'ready' && (
+            <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
+              live · notifications
+            </span>
+          )}
         </div>
 
         {/* Feed */}
         <section style={{ display: 'grid', gap: 10, marginTop: 14 }}>
-          {shown.map((a) => {
+          {status === 'loading' && (
+            <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+              Loading your inbox…
+            </div>
+          )}
+          {status === 'unavailable' && (
+            <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+              Your inbox is unavailable right now. Please try again shortly.
+            </div>
+          )}
+          {status === 'ready' && shown.map((a) => {
             const cat = CATEGORY_META[a.category];
             const sev = SEVERITY_META[a.severity];
             return (
@@ -107,7 +125,7 @@ export default function AlertHome() {
               </Link>
             );
           })}
-          {shown.length === 0 && (
+          {status === 'ready' && shown.length === 0 && (
             <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
               Nothing here yet.
             </div>
@@ -119,6 +137,7 @@ export default function AlertHome() {
           incident (the owning app does), enforces security (→ NX), reverses a
           payment (→ tec-payment-service), or takes governance action (→ SYSTEM). C-111 §4.
         </p>
+        <InviteCard />
       </div>
     </main>
   );
