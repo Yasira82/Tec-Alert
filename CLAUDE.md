@@ -29,7 +29,7 @@ Built from `tec-template-base` (Next.js 15 frontend).
 slug / legal + a read-only inbox (TEC activity + Pi community, filterable, severity
 + unread) + a `/alert/[id]` detail page + **Alert Pro** (the Pi Portal "Process a
 Transaction" gate). Live delivery (tec-notification-service + a Pi news source) is
-Phase 1+. Not yet deployed.
+Phase 1+. Deployed (Mainnet) · Pi App ID registered · env set · payment live · referral growth loop wired (C-133).
 
 ---
 
@@ -39,7 +39,7 @@ Phase 1+. Not yet deployed.
 |-------|-------|
 | **App** | TEC Alert |
 | **Domain** | `https://alert.tecosystem.app` |
-| **Pi App ID** | ⏳ TBD — register at Pi Developer Portal · then Vercel `NEXT_PUBLIC_PI_APP_ID` |
+| **Pi App ID** | ✅ Registered (Mainnet) · Vercel `NEXT_PUBLIC_PI_APP_ID` |
 | **APP_SOURCE slug** | `alert` (payment-service resolves `PI_API_KEY_ALERT`) |
 | **PI_SANDBOX** | `false` (Mainnet) |
 

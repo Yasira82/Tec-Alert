@@ -8,6 +8,7 @@
 // reads the live feed via /api/bff/alert/feed (tec-notification-service + a Pi news
 // source); with no session / unreachable backend it shows an honest empty state.
 import Link from 'next/link';
+import { InviteCard } from '@/components/referral/InviteCard';
 import { useEffect, useMemo, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
@@ -136,6 +137,7 @@ export default function AlertHome() {
           incident (the owning app does), enforces security (→ NX), reverses a
           payment (→ tec-payment-service), or takes governance action (→ SYSTEM). C-111 §4.
         </p>
+        <InviteCard />
       </div>
     </main>
   );
