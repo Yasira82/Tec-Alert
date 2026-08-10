@@ -148,9 +148,9 @@ export function AlertPro() {
         </div>
       </div>
       <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 8, lineHeight: 1.5 }}>
-        Priority alerts, custom rules, and instant push for the signals you choose
-        (payments, security, price targets, Pi news). Alert presents + routes; the
-        owning app still owns resolution (C-111 §4).
+        An <strong style={{ color: TEC_COLORS.text }}>unlimited watchlist</strong> (free is capped)
+        plus priority alerts and custom rules for the signals you choose (payments, security,
+        Pi news). Alert presents + routes; the owning app still owns resolution (C-111 §4).
       </div>
 
       <button

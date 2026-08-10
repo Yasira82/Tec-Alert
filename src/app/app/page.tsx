@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { AlertPro } from './components/AlertPro';
+import { Watchlist } from './components/Watchlist';
 import {
   CATEGORY_META, SEVERITY_META, filterFeed, unreadCount,
   type Source, type Alert,
@@ -83,6 +84,9 @@ export default function AlertHome() {
 
         {/* Alert Pro — real Pi U2A payment (service subscription). */}
         <AlertPro />
+
+        {/* Watchlist — your own reminders (own-data; Pro = unlimited) */}
+        <Watchlist />
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 8, marginTop: 26 }}>
