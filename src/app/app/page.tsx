@@ -78,7 +78,7 @@ export default function AlertHome() {
           </h1>
           <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
             One place for what matters — your TEC activity and the Pi community,
-            classified and prioritized. Alert presents; each app owns the action (C-111).
+            classified and prioritized. Alert presents; each app owns the action.
           </p>
         </header>
 

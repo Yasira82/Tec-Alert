@@ -70,7 +70,7 @@ export default async function AlertPage(
           <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>
             Alert classified this signal and surfaced it here. To act on it, open
             <strong style={{ color: TEC_COLORS.text }}> {a.app}</strong> — Alert routes,
-            it never resolves the incident itself (C-111 §4).
+            it never resolves the incident itself.
           </div>
         </div>
 

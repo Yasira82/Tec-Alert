@@ -5,7 +5,7 @@ import '@/styles/tec-design-tokens.css';
 
 export const metadata: Metadata = {
   title:       'TEC Alert — Your smart Pi inbox',
-  description: 'One place for what matters: TEC activity alerts + Pi community news, classified and prioritized (C-111).',
+  description: 'One place for what matters: TEC activity alerts + Pi community news, classified and prioritized.',
 };
 
 export default function RootLayout({
