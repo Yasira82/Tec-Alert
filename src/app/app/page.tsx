@@ -78,7 +78,7 @@ export default function AlertHome() {
           </h1>
           <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
             One place for what matters — your TEC activity and the Pi community,
-            classified and prioritized. Alert presents; each app owns the action.
+            sorted and prioritized so you never miss what needs your attention.
           </p>
         </header>
 
@@ -137,9 +137,9 @@ export default function AlertHome() {
         </section>
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
-          Alert aggregates + classifies + routes signals — it never resolves the
-          incident (the owning app does), enforces security (→ NX), reverses a
-          payment (→ tec-payment-service), or takes governance action (→ SYSTEM). C-111 §4.
+          Alert brings your notifications together and points you to the right place
+          to act. It doesn&apos;t handle the action itself — it makes sure you know
+          about it and gets you there fast.
         </p>
         <InviteCard />
       </div>

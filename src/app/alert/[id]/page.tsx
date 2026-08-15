@@ -75,8 +75,8 @@ export default async function AlertPage(
         </div>
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '20px 0 0', lineHeight: 1.5 }}>
-          Alerts are delivered by tec-notification-service + a curated Pi-community source.
-          Alert presents + routes — security response → NX; governance → SYSTEM.
+          Alerts cover your TEC activity and curated Pi-community news. Alert keeps
+          you informed and points you to the right place to act.
         </p>
       </div>
     </main>
