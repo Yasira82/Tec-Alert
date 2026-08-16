@@ -27,7 +27,7 @@ const TABS: { id: Source | 'all'; label: string }[] = [
 
 export default function AlertHome() {
   const { user, isLoading } = usePiAuth();
-  const name = user?.piUsername ? `@${user.piUsername}` : 'there';
+  const name = user?.piUsername ? `@${user.piUsername}` : '';
 
   const [tab,   setTab]   = useState<Source | 'all'>('all');
   const [feed,  setFeed]  = useState<Alert[]>([]);
@@ -73,7 +73,7 @@ export default function AlertHome() {
         <header>
           <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>TEC Alert · Smart inbox</div>
           <h1 style={{ fontSize: 26, fontWeight: 900, color: TEC_COLORS.gold, margin: '6px 0 0' }}>
-            {isLoading ? 'Your alerts' : `Hi ${name}`}
+            {isLoading || !name ? 'Your alerts' : `Hi ${name}`}
             {unread > 0 && <span style={{ fontSize: 13, fontWeight: 800, color: '#0a0800', background: TEC_COLORS.gold, borderRadius: 999, padding: '2px 10px', marginLeft: 10, verticalAlign: 'middle' }}>{unread} new</span>}
           </h1>
           <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
