@@ -7,33 +7,32 @@
 // Alert presents + routes; the owning app owns resolution (C-111 §4). The inbox
 // reads the live feed via /api/bff/alert/feed (tec-notification-service + a Pi news
 // source); with no session / unreachable backend it shows an honest empty state.
+// App shell: Inbox / Watchlist / Pro / Settings bottom nav.
 import Link from 'next/link';
-import { InviteCard } from '@/components/referral/InviteCard';
 import { useEffect, useMemo, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { useMe } from '@/lib-client/hooks/useMe';
 import { TEC_COLORS } from '@yasser172/tec-ui';
+import { useTranslation } from '@/lib/i18n';
 import { AlertPro } from './components/AlertPro';
 import { Watchlist } from './components/Watchlist';
+import { BottomNav, type AlertTab } from './components/BottomNav';
+import { SettingsView } from './components/SettingsView';
 import {
   CATEGORY_META, SEVERITY_META, filterFeed, unreadCount,
   type Source, type Alert,
 } from '@/lib/alert/feed';
 
-const TABS: { id: Source | 'all'; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'tec', label: 'My TEC' },
-  { id: 'pi',  label: 'Pi Community' },
-];
-
 export default function AlertHome() {
+  const { t } = useTranslation();
   const { user, isLoading } = usePiAuth();
   const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
   const piName = me.username ?? user?.piUsername ?? null;
   const name = piName ? `@${piName}` : '';
 
-  const [tab,   setTab]   = useState<Source | 'all'>('all');
-  const [feed,  setFeed]  = useState<Alert[]>([]);
+  const [nav,    setNav]   = useState<AlertTab>('inbox');
+  const [source, setSource] = useState<Source | 'all'>('all');
+  const [feed,   setFeed]  = useState<Alert[]>([]);
   // Real data end-to-end (C-135 §4): the live inbox or an honest empty state.
   const [status, setStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading');
 
@@ -55,14 +54,14 @@ export default function AlertHome() {
     return () => { alive = false; };
   }, []);
 
-  const shown  = useMemo(() => filterFeed({ source: tab }, feed), [tab, feed]);
+  const shown  = useMemo(() => filterFeed({ source }, feed), [source, feed]);
   const unread = useMemo(() => unreadCount(feed), [feed]);
 
   const toneColor = (tone: 'info' | 'good' | 'warn' | 'crit') =>
     tone === 'crit' ? TEC_COLORS.error : tone === 'warn' ? TEC_COLORS.gold
       : tone === 'good' ? TEC_COLORS.success : TEC_COLORS.subtext;
 
-  const tab_ = (active: boolean): React.CSSProperties => ({
+  const pill = (active: boolean): React.CSSProperties => ({
     fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
     color: active ? '#0a0800' : TEC_COLORS.text,
     background: active ? `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})` : 'transparent',
@@ -70,82 +69,104 @@ export default function AlertHome() {
     borderRadius: 999, padding: '7px 16px', cursor: 'pointer',
   });
 
+  const SOURCES: { id: Source | 'all'; label: string }[] = [
+    { id: 'all', label: t.alert.sources.all },
+    { id: 'tec', label: t.alert.sources.tec },
+    { id: 'pi',  label: t.alert.sources.pi  },
+  ];
+
+  const headerTitle =
+    nav === 'watchlist' ? t.alert.nav.watchlist
+    : nav === 'pro' ? t.alert.nav.pro
+    : nav === 'settings' ? t.alert.nav.settings
+    : (isLoading || !name ? t.alert.nav.inbox : `Hi ${name}`);
+
   return (
-    <main style={{ minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text, padding: '32px 22px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+    <main style={{ minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 22px calc(96px + env(safe-area-inset-bottom))' }}>
         <header>
-          <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>TEC Alert · Smart inbox</div>
+          <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>{t.alert.kicker}</div>
           <h1 style={{ fontSize: 26, fontWeight: 900, color: TEC_COLORS.gold, margin: '6px 0 0' }}>
-            {isLoading || !name ? 'Your alerts' : `Hi ${name}`}
-            {unread > 0 && <span style={{ fontSize: 13, fontWeight: 800, color: '#0a0800', background: TEC_COLORS.gold, borderRadius: 999, padding: '2px 10px', marginLeft: 10, verticalAlign: 'middle' }}>{unread} new</span>}
+            {headerTitle}
+            {nav === 'inbox' && unread > 0 && <span style={{ fontSize: 13, fontWeight: 800, color: '#0a0800', background: TEC_COLORS.gold, borderRadius: 999, padding: '2px 10px', marginLeft: 10, verticalAlign: 'middle' }}>{unread} new</span>}
           </h1>
-          <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
-            One place for what matters — your TEC activity and the Pi community,
-            sorted and prioritized so you never miss what needs your attention.
-          </p>
+          {nav === 'inbox' && (
+            <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>{t.alert.tagline}</p>
+          )}
         </header>
 
-        {/* Alert Pro — real Pi U2A payment (service subscription). */}
-        <AlertPro />
+        {/* ── INBOX ───────────────────────────────────────────────── */}
+        {nav === 'inbox' && (<>
+          {/* Source filter */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 22 }}>
+            {SOURCES.map((sc) => (
+              <button key={sc.id} style={pill(source === sc.id)} onClick={() => setSource(sc.id)}>{sc.label}</button>
+            ))}
+            {status === 'ready' && (
+              <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
+                live · notifications
+              </span>
+            )}
+          </div>
 
-        {/* Watchlist — your own reminders (own-data; Pro = unlimited) */}
-        <Watchlist />
+          {/* Feed */}
+          <section style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+            {status === 'loading' && (
+              <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+                Loading your inbox…
+              </div>
+            )}
+            {status === 'unavailable' && (
+              <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+                Your inbox is unavailable right now. Please try again shortly.
+              </div>
+            )}
+            {status === 'ready' && shown.map((a) => {
+              const cat = CATEGORY_META[a.category];
+              const sev = SEVERITY_META[a.severity];
+              return (
+                <Link key={a.id} href={`/alert/${a.id}`} style={{ background: TEC_COLORS.surface, border: `1px solid ${a.unread ? TEC_COLORS.gold + '55' : TEC_COLORS.gold + '1f'}`, borderRadius: 12, padding: 14, display: 'block', textDecoration: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
+                      {cat.icon} {a.title}
+                      {a.unread && <span style={{ width: 8, height: 8, borderRadius: 999, background: TEC_COLORS.gold, display: 'inline-block', marginLeft: 8, verticalAlign: 'middle' }} />}
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap', color: toneColor(sev.tone), border: `1px solid ${toneColor(sev.tone)}55`, borderRadius: 999, padding: '2px 8px' }}>{sev.label}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{a.body}</div>
+                  <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 6 }}>{cat.label} · {a.app} · {a.ago}</div>
+                </Link>
+              );
+            })}
+            {status === 'ready' && shown.length === 0 && (
+              <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+                Nothing here yet.
+              </div>
+            )}
+          </section>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 8, marginTop: 26 }}>
-          {TABS.map((t) => (
-            <button key={t.id} style={tab_(tab === t.id)} onClick={() => setTab(t.id)}>{t.label}</button>
-          ))}
-          {status === 'ready' && (
-            <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
-              live · notifications
-            </span>
-          )}
-        </div>
+          <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
+            Alert brings your notifications together and points you to the right place
+            to act. It doesn&apos;t handle the action itself — it makes sure you know
+            about it and gets you there fast.
+          </p>
+        </>)}
 
-        {/* Feed */}
-        <section style={{ display: 'grid', gap: 10, marginTop: 14 }}>
-          {status === 'loading' && (
-            <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
-              Loading your inbox…
-            </div>
-          )}
-          {status === 'unavailable' && (
-            <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
-              Your inbox is unavailable right now. Please try again shortly.
-            </div>
-          )}
-          {status === 'ready' && shown.map((a) => {
-            const cat = CATEGORY_META[a.category];
-            const sev = SEVERITY_META[a.severity];
-            return (
-              <Link key={a.id} href={`/alert/${a.id}`} style={{ background: TEC_COLORS.surface, border: `1px solid ${a.unread ? TEC_COLORS.gold + '55' : TEC_COLORS.gold + '1f'}`, borderRadius: 12, padding: 14, display: 'block', textDecoration: 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
-                    {cat.icon} {a.title}
-                    {a.unread && <span style={{ width: 8, height: 8, borderRadius: 999, background: TEC_COLORS.gold, display: 'inline-block', marginLeft: 8, verticalAlign: 'middle' }} />}
-                  </span>
-                  <span style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap', color: toneColor(sev.tone), border: `1px solid ${toneColor(sev.tone)}55`, borderRadius: 999, padding: '2px 8px' }}>{sev.label}</span>
-                </div>
-                <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{a.body}</div>
-                <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 6 }}>{cat.label} · {a.app} · {a.ago}</div>
-              </Link>
-            );
-          })}
-          {status === 'ready' && shown.length === 0 && (
-            <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
-              Nothing here yet.
-            </div>
-          )}
-        </section>
+        {/* ── WATCHLIST ───────────────────────────────────────────── */}
+        {nav === 'watchlist' && (
+          <div style={{ marginTop: 22 }}><Watchlist /></div>
+        )}
 
-        <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
-          Alert brings your notifications together and points you to the right place
-          to act. It doesn&apos;t handle the action itself — it makes sure you know
-          about it and gets you there fast.
-        </p>
-        <InviteCard />
+        {/* ── PRO ─────────────────────────────────────────────────── */}
+        {nav === 'pro' && (
+          <div style={{ marginTop: 22 }}><AlertPro /></div>
+        )}
+
+        {/* ── SETTINGS ────────────────────────────────────────────── */}
+        {nav === 'settings' && <SettingsView />}
       </div>
+
+      <BottomNav active={nav} onSelect={setNav} />
     </main>
   );
 }
