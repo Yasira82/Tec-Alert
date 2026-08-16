@@ -70,13 +70,13 @@ export default async function AlertPage(
           <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>
             Alert classified this signal and surfaced it here. To act on it, open
             <strong style={{ color: TEC_COLORS.text }}> {a.app}</strong> — Alert routes,
-            it never resolves the incident itself (C-111 §4).
+            it never resolves the incident itself.
           </div>
         </div>
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '20px 0 0', lineHeight: 1.5 }}>
-          Alerts are delivered by tec-notification-service + a curated Pi-community source.
-          Alert presents + routes — security response → NX; governance → SYSTEM.
+          Alerts cover your TEC activity and curated Pi-community news. Alert keeps
+          you informed and points you to the right place to act.
         </p>
       </div>
     </main>

@@ -1,11 +1,12 @@
 import { RefCapture } from '@/components/referral/RefCapture';
 import { RefApply } from '@/components/referral/RefApply';
+import { LocaleProvider } from '@/lib/i18n';
 import type { Metadata } from 'next';
 import '@/styles/tec-design-tokens.css';
 
 export const metadata: Metadata = {
   title:       'TEC Alert — Your smart Pi inbox',
-  description: 'One place for what matters: TEC activity alerts + Pi community news, classified and prioritized (C-111).',
+  description: 'One place for what matters: TEC activity alerts + Pi community news, classified and prioritized.',
 };
 
 export default function RootLayout({
@@ -61,9 +62,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <RefCapture />
-        <RefApply />
-        {children}
+        <LocaleProvider>
+          <RefCapture />
+          <RefApply />
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   );

@@ -95,7 +95,7 @@ export function Watchlist() {
         <div style={{ marginTop: watches.length ? 12 : 0 }}>
           {watches.length === 0 ? (
             <p style={{ fontSize: 13, color: TEC_COLORS.subtext, marginTop: 12 }}>
-              Nothing on your watchlist yet. Add what you don’t want to miss — it’s yours (C-111).
+              Nothing on your watchlist yet. Add what you don’t want to miss — it’s yours.
             </p>
           ) : (
             watches.map((w, i) => (
