@@ -112,7 +112,7 @@ export function SettingsView() {
                   this app cannot diagnose from anywhere else. */}
               {!username && !signedIn && !me.loading && me.reason && (
                 <span style={{ fontSize: 11, fontWeight: 600, color: TEC_COLORS.subtext, marginInlineStart: 8 }}>
-                  · {me.reason}{me.signIn ? ` · ${me.signIn}` : ''}
+                  · {me.reason}{me.signIn ? ` · ${me.signIn}` : ''}{me.cookies ? ` · got:${me.cookies}` : ''}
                 </span>
               )}
             </div>
