@@ -12,7 +12,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { NextRequest } from 'next/server';
-import { middleware } from '../../middleware';
+import { middleware } from '../middleware';
 
 const visit = (cookies: Record<string, string>, path = '/app?q=1') => {
   const req = new NextRequest(`https://alert.tecosystem.app${path}`);
@@ -26,13 +26,15 @@ describe('the page guard admits a WHOLE session only', () => {
   it('sends a half session (token, no tec_user) to sign in', () => {
     const res = visit({ tec_access_token: 'tok' });
     expect(res.status).toBe(307);
-    expect(redirectedTo(res)).toContain('/?redirect=%2Fapp');
+    expect(redirectedTo(res)).toContain('/api/auth/sso?target=');
   });
 
   it('keeps the Hub-surface marker across that hop', () => {
     // The one visitor who had to sign in is the one most likely to be lost
     // afterwards — the way back must survive the redirect.
-    expect(redirectedTo(visit({ tec_access_token: 'tok' }))).toContain('q=1');
+    // It now rides inside the Hub SSO's `target` (C-123 §11), so read it there.
+    const loc = new URL(redirectedTo(visit({ tec_access_token: 'tok' })) as string);
+    expect(new URL(loc.searchParams.get('target') as string).searchParams.get('q')).toBe('1');
   });
 
   it('sends the other half (tec_user, no token) too', () => {
@@ -41,6 +43,19 @@ describe('the page guard admits a WHOLE session only', () => {
 
   it('treats a blank cookie as absent', () => {
     expect(visit({ tec_access_token: 'tok', tec_user: '  ' }).status).toBe(307);
+  });
+
+  it('goes to the Hub SSO, keeping path AND query, and marks the round trip', () => {
+    const loc = new URL(redirectedTo(visit({})) as string);
+    expect(loc.origin).toBe('https://hub.tecosystem.app');
+    expect(loc.pathname).toBe('/api/auth/sso');
+    const back = new URL(loc.searchParams.get('target') as string);
+    expect(back.toString()).toBe('https://alert.tecosystem.app/app?q=1&__sso=1');
+  });
+
+  it('CANNOT LOOP: back from the SSO and still no session → the page opens as it is (§7)', () => {
+    const res = visit({}, '/app?q=1&__sso=1');
+    expect(redirectedTo(res)).toBeNull();
   });
 
   it('lets a whole session through', () => {
