@@ -62,10 +62,15 @@ export interface ResolvedAlert { alert: Alert | null; source: 'live' | 'unavaila
 // One alert by id — live backend only. A live 404 is authoritative (alert: null,
 // source: 'live'); an unreachable backend resolves to (alert: null, source:
 // 'unavailable'). Never a fabricated sample.
-export async function resolveAlert(id: string): Promise<ResolvedAlert> {
+//
+// `viewer` is the session user (server-resolved — never a client value, P6). The
+// backend shows a platform-wide finding only to an operator (C-111, 2026-09-28), so
+// without it such an alert is a 404, which is the right answer for everyone else.
+export async function resolveAlert(id: string, viewer?: string | null): Promise<ResolvedAlert> {
   if (GW) {
     try {
-      const res = await fetch(`${GW}/api/identity/alert/alert/${encodeURIComponent(id)}`, {
+      const q = viewer ? `?owner=${encodeURIComponent(viewer)}` : '';
+      const res = await fetch(`${GW}/api/identity/alert/alert/${encodeURIComponent(id)}${q}`, {
         headers: gwHeaders(), cache: 'no-store',
       });
       if (res.ok) {
