@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { CATEGORY_META, SEVERITY_META } from '@/lib/alert/feed';
+import { cookies } from 'next/headers';
 import { resolveAlert } from '@/lib/alert/server';
 
 // Rendered dynamically from the live Alert read-layer — real data end-to-end
@@ -11,11 +12,24 @@ import { resolveAlert } from '@/lib/alert/server';
 // "couldn't load". Never a fabricated sample.
 export const dynamic = 'force-dynamic';
 
+// The viewer, from the `tec_user` session cookie server-side — the same read as the
+// feed BFF (P6: never a param). It decides whether a platform finding is shown.
+function viewerFromSession(jar: { get(name: string): { value: string } | undefined }): string | null {
+  try {
+    const raw = jar.get('tec_user')?.value ?? '';
+    if (!raw) return null;
+    let u: Record<string, unknown>;
+    try { u = JSON.parse(raw); } catch { u = JSON.parse(decodeURIComponent(raw)); }
+    const name = (u.piUsername ?? u.username) as string | undefined;
+    return name && name.trim() ? name : null;
+  } catch { return null; }
+}
+
 export default async function AlertPage(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { alert: a, source } = await resolveAlert(id);
+  const { alert: a, source } = await resolveAlert(id, viewerFromSession(await cookies()));
 
   const wrap: React.CSSProperties = {
     minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
