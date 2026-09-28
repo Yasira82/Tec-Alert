@@ -20,7 +20,7 @@ describe('resolveAlert — viewer', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { resolveAlert } = await import('@/lib/alert/server');
     await resolveAlert('finding-total_payments-2026-09-14', 'yasser');
-    expect(fetchMock.mock.calls[0][0]).toBe(`${GW}/api/identity/alert/alert/finding-total_payments-2026-09-14?owner=yasser`);
+    expect(fetchMock).toHaveBeenCalledWith(`${GW}/api/identity/alert/alert/finding-total_payments-2026-09-14?owner=yasser`, expect.anything());
   });
 
   it('sends no owner when there is no session', async () => {
@@ -28,7 +28,7 @@ describe('resolveAlert — viewer', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { resolveAlert } = await import('@/lib/alert/server');
     await resolveAlert('pi-mainnet-1', null);
-    expect(fetchMock.mock.calls[0][0]).toBe(`${GW}/api/identity/alert/alert/pi-mainnet-1`);
+    expect(fetchMock).toHaveBeenCalledWith(`${GW}/api/identity/alert/alert/pi-mainnet-1`, expect.anything());
   });
 
   it('a 404 (not an operator, or not found) is an authoritative "not found"', async () => {
