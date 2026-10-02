@@ -3,6 +3,8 @@
 // P6 — owner is the session identity, resolved by the BFF, never a client field). Alert
 // Pro = unlimited watches; FREE is capped (enforced in the BFF from the live subscription,
 // P5). NEW-A: the gateway URL is server-only (API_GATEWAY_URL) — never shipped to client.
+import { APP_SOURCE } from '@/lib/app-source';
+
 const GW = process.env.API_GATEWAY_URL ?? '';
 
 export const FREE_WATCH_CAP = 3;
@@ -79,7 +81,7 @@ export async function deleteWatch(owner: string, id: string): Promise<boolean> {
 export async function resolveProStatus(token: string | null): Promise<boolean> {
   if (!GW || !token) return false;
   try {
-    const res = await fetch(`${GW}/api/commerce/subscriptions/status`, { headers: gwHeaders(token), cache: 'no-store' });
+    const res = await fetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, { headers: gwHeaders(token), cache: 'no-store' });
     if (!res.ok) return false;
     const d = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     // commerce returns { data: { subscription: {...} } } — unwrap the subscription
