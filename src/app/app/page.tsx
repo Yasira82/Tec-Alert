@@ -1,5 +1,7 @@
 'use client';
 
+import { SignInGate } from '@/components/pi/SignInGate';
+
 // TEC Alert — the smart notification hub (C-111, extended). "What do I need to
 // know right now?" One inbox that aggregates + classifies signals from every TEC
 // app (payments, security, connections, goals, assets, property, verification,
@@ -23,7 +25,7 @@ import {
   type Source, type Alert,
 } from '@/lib/alert/feed';
 
-export default function AlertHome() {
+function AlertHome() {
   const { t } = useTranslation();
   const { user, isLoading } = usePiAuth();
   const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
@@ -169,4 +171,11 @@ export default function AlertHome() {
       <BottomNav active={nav} onSelect={setNav} />
     </main>
   );
+}
+
+// The door: a sign-in button before any screen when there is no session
+// (SignInGate — C-123 §10; owner, 2026-10-06). A visit from the Hub arrives
+// signed in (§12) and goes straight through.
+export default function AlertHomeGated() {
+  return <SignInGate><AlertHome /></SignInGate>;
 }
