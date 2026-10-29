@@ -135,7 +135,7 @@ function AlertHome() {
                     </span>
                     <span style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap', color: toneColor(sev.tone), border: `1px solid ${toneColor(sev.tone)}55`, borderRadius: 999, padding: '2px 8px' }}>{sev.label}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{a.body}</div>
+                  <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>{a.body}</div>
                   <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 6 }}>{cat.label} · {a.app} · {a.ago}</div>
                 </Link>
               );
