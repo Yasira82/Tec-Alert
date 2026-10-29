@@ -76,7 +76,7 @@ export default async function AlertPage(
           </div>
         </div>
 
-        <p style={{ fontSize: 15, color: TEC_COLORS.text, margin: '16px 0 0', lineHeight: 1.6 }}>{a.body}</p>
+        <p style={{ fontSize: 15, color: TEC_COLORS.text, margin: '16px 0 0', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{a.body}</p>
         <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 10 }}>{a.ago} ago · from {a.app}</div>
 
         <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 14, marginTop: 20 }}>
