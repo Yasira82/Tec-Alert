@@ -6,6 +6,7 @@
 // FREE is capped (enforced server-side, P5). Additive — it takes away nothing free.
 import { useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
+import { reportError } from '@/lib/observability/reportError';
 
 interface Watch { id: string; title: string; note?: string; done: boolean; }
 
@@ -57,13 +58,33 @@ export function Watchlist() {
     finally { setBusy(false); }
   };
 
+  // Both change the screen first and the server second. When the server does not take
+  // the change, the screen goes back to what is true and says so — it used to keep
+  // showing a change that the next reload undid, with nothing reported (E8).
   const toggle = async (w: Watch) => {
-    setWatches((list) => list.map((x) => (x.id === w.id ? { ...x, done: !x.done } : x)));
-    try { await fetch(`/api/bff/alert/watch/${encodeURIComponent(w.id)}`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: !w.done }) }); } catch {}
+    setMsg('');
+    setWatches((list) => list.map((x) => (x.id === w.id ? { ...x, done: !w.done } : x)));
+    try {
+      const res = await fetch(`/api/bff/alert/watch/${encodeURIComponent(w.id)}`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: !w.done }) });
+      if (!res.ok) throw new Error(`watch update failed: HTTP ${res.status}`);
+    } catch (err) {
+      setWatches((list) => list.map((x) => (x.id === w.id ? { ...x, done: w.done } : x)));
+      setMsg('Could not save. Please retry.');
+      reportError(err, { where: 'alert/watchlist/toggle' });
+    }
   };
   const remove = async (id: string) => {
+    setMsg('');
+    const before = watches;
     setWatches((list) => list.filter((x) => x.id !== id));
-    try { await fetch(`/api/bff/alert/watch/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' }); } catch {}
+    try {
+      const res = await fetch(`/api/bff/alert/watch/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) throw new Error(`watch delete failed: HTTP ${res.status}`);
+    } catch (err) {
+      setWatches(before);
+      setMsg('Could not delete. Please retry.');
+      reportError(err, { where: 'alert/watchlist/remove' });
+    }
   };
 
   if (!loaded) return null;
