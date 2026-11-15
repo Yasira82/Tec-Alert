@@ -4,6 +4,7 @@
 // Pro = unlimited watches; FREE is capped (enforced in the BFF from the live subscription,
 // P5). NEW-A: the gateway URL is server-only (API_GATEWAY_URL) — never shipped to client.
 import { APP_SOURCE } from '@/lib/app-source';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 const GW = process.env.API_GATEWAY_URL ?? '';
 
@@ -29,7 +30,7 @@ const toWatch = (o: Record<string, unknown>): Watch => ({
 export async function resolveWatches(owner: string | null): Promise<Watch[]> {
   if (!GW || !owner) return [];
   try {
-    const res = await fetch(`${GW}/api/identity/alert/watch/${encodeURIComponent(owner)}`, { headers: gwHeaders(), cache: 'no-store' });
+    const res = await gatewayFetch(`${GW}/api/identity/alert/watch/${encodeURIComponent(owner)}`, { headers: gwHeaders(), cache: 'no-store' });
     if (!res.ok) return [];
     const rows = (await res.json().catch(() => ({})))?.data?.watches;
     return Array.isArray(rows) ? rows.map((w) => toWatch(w as Record<string, unknown>)) : [];
@@ -42,7 +43,7 @@ export interface CreateResult { ok: boolean; status: number; watch?: Watch; erro
 export async function createWatch(owner: string, input: { title: string; note?: string }): Promise<CreateResult> {
   if (!GW) return { ok: false, status: 503, error: 'Alert is unavailable right now.' };
   try {
-    const res = await fetch(`${GW}/api/identity/alert/watch`, {
+    const res = await gatewayFetch(`${GW}/api/identity/alert/watch`, {
       method: 'POST', headers: gwHeaders(), body: JSON.stringify({ owner, ...input }), cache: 'no-store',
     });
     const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -58,7 +59,7 @@ export async function createWatch(owner: string, input: { title: string; note?: 
 export async function setWatchDone(owner: string, id: string, done: boolean): Promise<boolean> {
   if (!GW || !owner) return false;
   try {
-    const res = await fetch(`${GW}/api/identity/alert/watch/${encodeURIComponent(owner)}/${encodeURIComponent(id)}`, {
+    const res = await gatewayFetch(`${GW}/api/identity/alert/watch/${encodeURIComponent(owner)}/${encodeURIComponent(id)}`, {
       method: 'PATCH', headers: gwHeaders(), body: JSON.stringify({ done }), cache: 'no-store',
     });
     return res.ok;
@@ -69,7 +70,7 @@ export async function setWatchDone(owner: string, id: string, done: boolean): Pr
 export async function deleteWatch(owner: string, id: string): Promise<boolean> {
   if (!GW || !owner) return false;
   try {
-    const res = await fetch(`${GW}/api/identity/alert/watch/${encodeURIComponent(owner)}/${encodeURIComponent(id)}`, {
+    const res = await gatewayFetch(`${GW}/api/identity/alert/watch/${encodeURIComponent(owner)}/${encodeURIComponent(id)}`, {
       method: 'DELETE', headers: gwHeaders(), cache: 'no-store',
     });
     return res.ok;
@@ -81,7 +82,7 @@ export async function deleteWatch(owner: string, id: string): Promise<boolean> {
 export async function resolveProStatus(token: string | null): Promise<boolean> {
   if (!GW || !token) return false;
   try {
-    const res = await fetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, { headers: gwHeaders(token), cache: 'no-store' });
+    const res = await gatewayFetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, { headers: gwHeaders(token), cache: 'no-store' });
     if (!res.ok) return false;
     const d = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     // commerce returns { data: { subscription: {...} } } — unwrap the subscription

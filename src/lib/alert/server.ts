@@ -2,6 +2,7 @@ import {
   unreadCount,
   type Alert, type Source, type Category, type Severity,
 } from './feed';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // Server-only Alert backend access (C-111). Calls the real Alert read-layer
 // (identity-service) via the gateway with the inter-service key, and maps the
@@ -42,7 +43,7 @@ export interface ResolvedFeed { feed: Alert[]; source: 'live' | 'unavailable'; }
 export async function resolveFeed(owner: string | null, source: Source | 'all'): Promise<ResolvedFeed> {
   if (GW) {
     try {
-      const res = await fetch(
+      const res = await gatewayFetch(
         `${GW}/api/identity/alert/feed/${encodeURIComponent(owner || '-')}?source=${encodeURIComponent(source)}`,
         { headers: gwHeaders(), cache: 'no-store' },
       );
@@ -70,7 +71,7 @@ export async function resolveAlert(id: string, viewer?: string | null): Promise<
   if (GW) {
     try {
       const q = viewer ? `?owner=${encodeURIComponent(viewer)}` : '';
-      const res = await fetch(`${GW}/api/identity/alert/alert/${encodeURIComponent(id)}${q}`, {
+      const res = await gatewayFetch(`${GW}/api/identity/alert/alert/${encodeURIComponent(id)}${q}`, {
         headers: gwHeaders(), cache: 'no-store',
       });
       if (res.ok) {
